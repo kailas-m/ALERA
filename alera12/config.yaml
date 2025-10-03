@@ -1,0 +1,16 @@
+data:
+  metadata_csv: "data/ISIC_2019_Training_Metadata.csv"
+  labels_csv: "data/ISIC_2019_Training_GroundTruth.csv"
+  images_dir: "data/images"
+
+training:
+  device: "cuda"
+  img_size: 224
+  batch_size: 16
+  lr: 0.0001
+  epochs: 5
+
+output:
+  models_dir: "models"
+  resnet_name: "resnet50_isic2019.pth"
+  densenet_name: "densenet121_isic2019.pth"

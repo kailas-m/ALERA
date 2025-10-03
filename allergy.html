@@ -1,0 +1,437 @@
+<!-- allergy.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="static/firebase-init.js"></script>
+    <script src="static/auth.js" defer></script>
+    <style>
+        :root {
+            --primary: #00796b; /* dark teal used across the site */
+            --secondary: #00bfa5; /* light teal for buttons */
+            --accent: #ff6f61; /* soft pink for CTA */
+            --text: #333; /* body text color */
+        }
+
+        .auth-button {
+            background-color: var(--secondary);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        
+        .auth-button:hover {
+            background-color: #00897b;
+        }
+        
+        /* Hero Section */
+        .analysis-hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #1a3a5f 100%);
+            color: white;
+            padding: 100px 5% 80px 5%; /* extra top padding so CTA sits below sticky navbar */
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .analysis-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
+            background-size: cover;
+        }
+        
+        .analysis-hero .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .analysis-hero h2 {
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .analysis-hero p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .cta-button {
+            background-color: var(--accent);
+            color: white;
+            padding: 15px 35px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 111, 97, 0.3);
+            display: inline-block;
+            text-decoration: none;
+            position: relative; /* keep for hover/transform */
+            z-index: 2; /* ensure navbar (z-index:1000) stays above CTA to avoid overlap */
+        }
+        
+        .cta-button:hover {
+            background-color: #ff3b2f;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 111, 97, 0.4);
+        }
+        
+        /* Skin Conditions Section */
+        .skin-conditions {
+            padding: 80px 5%;
+            background-color: white;
+            text-align: center;
+        }
+        
+        .skin-conditions h2 {
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .conditions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto 50px;
+        }
+        
+        .condition-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            padding: 30px 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: left;
+        }
+        
+        .condition-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .condition-icon {
+            font-size: 40px;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+        
+        .condition-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .condition-card p {
+            color: var(--text);
+            line-height: 1.7;
+            margin-bottom: 0;
+        }
+        
+        /* CTA Section */
+        .cta {
+            padding: 80px 5%;
+            background: linear-gradient(135deg, var(--primary) 0%, #1a3a5f 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .cta h2 {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .cta p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0.9;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--primary);
+            color: white;
+            padding: 40px 5%;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin-bottom: 20px;
+        }
+        
+        .social-media {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .social-media a {
+            color: white;
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+        }
+        
+        .social-media a:hover {
+            color: var(--secondary);
+        }
+        
+        /* Chatbot Styles */
+        .chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .chatbot-button {
+            background-color: #00bfa5;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-button:hover {
+            background-color: #00897b;
+            transform: scale(1.1);
+        }
+
+        .chatbot-window {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 300px;
+            height: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+        }
+
+        .chatbot-header {
+            background: #132846;
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .chatbot-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .chatbot-input button {
+            background: #00bfa5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 15px;
+            }
+            
+            .nav-links {
+                margin: 20px 0;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+            
+            .analysis-hero h2 {
+                font-size: 2.2rem;
+            }
+            
+            .analysis-hero p {
+                font-size: 1rem;
+            }
+            
+            .skin-conditions h2 {
+                font-size: 2rem;
+            }
+            
+            .conditions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sticky Navigation Bar -->
+    <header class="navbar">
+        <div class="logo">
+            <img src="/images/dna3.png" alt="ALERA AI Logo">
+        </div>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="allergy.html">Analysis</a>
+            <a href="contact.html">Contact</a>
+            <a href="about.html">About</a>
+        </nav>
+        <div class="auth-buttons">
+            <button class="auth-button" onclick="window.location.href='signup.html'">Sign Up</button>
+            <button class="auth-button" onclick="window.location.href='login.html'">Log In</button>
+        </div>
+    </header>
+
+    <!-- Analysis Hero Section -->
+    <section class="analysis-hero">
+        <div class="hero-content">
+            <h2>Comprehensive Skin Condition Analysis</h2>
+            <p>Learn about different skin conditions and how AI can help with early detection and analysis. Take control of your skin health today!</p>
+            <a class="cta-button" href="uploadDNAimage.html">Upload Skin Image</a>
+        </div>
+    </section>
+
+    <!-- Skin Conditions Section -->
+    <section class="skin-conditions">
+        <h2>Common Skin Conditions</h2>
+        <div class="conditions-grid">
+            <div class="condition-card">
+                <div class="condition-icon">
+                    <i class="fas fa-bandage"></i>
+                </div>
+                <h3>Rashes & Dermatitis</h3>
+                <p>Inflammatory skin reactions caused by irritants, allergies, or infections. Includes eczema, contact dermatitis, and various rash types that cause redness, itching, and discomfort.</p>
+            </div>
+            <div class="condition-card">
+                <div class="condition-icon">
+                    <i class="fas fa-dot-circle"></i>
+                </div>
+                <h3>Moles & Lesions</h3>
+                <p>Skin growths that can be benign or potentially malignant. Regular monitoring helps detect changes that might indicate skin cancer development.</p>
+            </div>
+            <div class="condition-card">
+                <div class="condition-icon">
+                    <i class="fas fa-bacteria"></i>
+                </div>
+                <h3>Infections</h3>
+                <p>Bacterial, viral, or fungal infections affecting the skin. Includes impetigo, warts, ringworm, and other contagious conditions requiring proper diagnosis.</p>
+            </div>
+            <div class="condition-card">
+                <div class="condition-icon">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <h3>Inflammatory Conditions</h3>
+                <p>Chronic conditions like psoriasis, rosacea, and acne that cause persistent inflammation, redness, and skin changes requiring ongoing management.</p>
+            </div>
+            <div class="condition-card">
+                <div class="condition-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3>Potentially Serious Conditions</h3>
+                <p>Skin changes that may indicate serious health issues, including early signs of melanoma, basal cell carcinoma, and other skin cancers.</p>
+            </div>
+        </div>
+    <a class="cta-button" href="uploadDNAimage.html">Start Skin Analysis</a>
+    </section>
+
+    <!-- Call-to-Action Section -->
+    <section class="cta">
+        <h2>Ready to Analyze Your Skin Condition?</h2>
+        <p>Our AI-powered analysis can help identify potential skin issues early. Upload an image for instant analysis.</p>
+    <a class="cta-button" href="uploadDNAimage.html">Upload Skin Image Now</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 ALERA AI. All rights reserved.</p>
+        <div class="social-media">
+            <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
+            <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://linkedin.com" target="_blank"><i class="fab fa-linkedin"></i></a>
+        </div>
+    </footer>
+
+    <script src="static/chatbot.js"></script>
+    <script>
+    // Diagnostic & fallback for CTAs: if an overlay blocks the CTA, raise z-index and force navigation fallback
+    document.addEventListener('DOMContentLoaded', function(){
+        try{
+            var ctas = document.querySelectorAll('.cta-button');
+            ctas.forEach(function(a){
+                // Ensure anchor behaves like a link if a button style replaced it
+                a.addEventListener('click', function(e){
+                    var href = a.getAttribute('href');
+                    if(href){
+                        // small fallback to force navigation if default is prevented by overlay
+                        setTimeout(function(){ window.location.href = href; }, 60);
+                    }
+                });
+
+                // Check what's on top at the center of the CTA
+                var r = a.getBoundingClientRect();
+                var cx = r.left + r.width/2;
+                var cy = r.top + r.height/2;
+                var topEl = document.elementFromPoint(cx, cy);
+                if(topEl && topEl !== a && !a.contains(topEl)){
+                    console.warn('CTA appears to be overlapped by', topEl, '— raising z-index for', a);
+                    a.style.zIndex = '2001';
+                    a.style.pointerEvents = 'auto';
+                    a.style.position = 'relative';
+                }
+            });
+        }catch(err){
+            console.error('CTA diagnostic script error:', err);
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Skin Image - ALERA AI</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="static/firebase-init.js"></script>
+    <script src="static/auth.js" defer></script>
+    <style>
+        :root {
+            --primary: #132846;
+            --secondary: #00bfa5;
+            --accent: #ff6f61;
+            --light: #f9f9f9;
+            --dark: #333;
+            --text: #555;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--light);
+        }
+        
+        /* Header Styles */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background: var(--primary);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo img {
+            height: 50px;
+            width: auto;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            color: var(--secondary);
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .auth-button {
+            background-color: var(--secondary);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        
+        .auth-button:hover {
+            background-color: #00897b;
+        }
+        
+        /* Hero Section */
+        .upload-hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #1a3a5f 100%);
+            color: white;
+            padding: 100px 5%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
+            background-size: cover;
+        }
+        
+        .upload-hero .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .upload-hero h2 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .upload-hero p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        /* Upload Container */
+        .upload-container {
+            padding: 100px 5%;
+            background-color: white;
+            text-align: center;
+        }
+        
+        .upload-container h2 {
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .upload-content {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Patient Information Section */
+        .patient-info-section {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 40px 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: left;
+        }
+        
+        .patient-info-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+        
+        .section-title i {
+            color: var(--secondary);
+        }
+        
+        /* Patient Information Form */
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .metadata-field {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .metadata-field label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+        
+        .metadata-field input,
+        .metadata-field select {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .metadata-field input:focus,
+        .metadata-field select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 2px rgba(0, 191, 165, 0.1);
+        }
+        
+        /* Upload Box */
+        .upload-box {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .upload-box.dragover {
+            border-color: var(--secondary);
+            background-color: rgba(0, 191, 165, 0.05);
+        }
+        
+        .upload-icon {
+            font-size: 50px;
+            color: #bbb;
+            margin-bottom: 20px;
+        }
+        
+        .upload-box p {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+        
+        .browse-btn {
+            background-color: var(--accent);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .browse-btn:hover {
+            background-color: #ff3b2f;
+        }
+        
+        .file-info {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #777;
+        }
+        
+        /* Analyze Button */
+        .analyze-btn-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .analyze-btn {
+            background-color: var(--secondary);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .analyze-btn:hover {
+            background-color: #00897b;
+        }
+        
+        .analyze-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        /* Results Section */
+        .results-section {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 40px 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: left;
+        }
+        
+        .results-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+        
+        #resultsPlaceholder {
+            text-align: center;
+            color: #777;
+            font-style: italic;
+            padding: 60px 20px;
+        }
+        
+        .preview-section {
+            text-align: center;
+            display: none;
+        }
+        
+        .preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .cancel-btn, .scan-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .cancel-btn {
+            background-color: #e0e0e0;
+            color: var(--text);
+        }
+        
+        .cancel-btn:hover {
+            background-color: #d0d0d0;
+        }
+        
+        .scan-btn {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .scan-btn:hover {
+            background-color: #00897b;
+        }
+        
+        .scan-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .status-message {
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: var(--text);
+            min-height: 24px;
+            text-align: center;
+        }
+        
+        /* Disclaimer Section */
+        .disclaimer {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 40px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .disclaimer h3 {
+            color: #e65100;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .disclaimer p {
+            margin: 10px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        /* CTA Section */
+        .cta {
+            padding: 100px 5%;
+            background: var(--light);
+            text-align: center;
+        }
+        
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .cta p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            color: var(--text);
+        }
+        
+        .cta a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .cta a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--primary);
+            color: white;
+            padding: 40px 5%;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin-bottom: 20px;
+        }
+        
+        .social-media {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .social-media a {
+            color: white;
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+        }
+        
+        .social-media a:hover {
+            color: var(--secondary);
+        }
+        
+        /* Chatbot Styles */
+        .chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .chatbot-button {
+            background-color: #00bfa5;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-button:hover {
+            background-color: #00897b;
+            transform: scale(1.1);
+        }
+
+        .chatbot-window {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 300px;
+            height: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+        }
+
+        .chatbot-header {
+            background: #132846;
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .chatbot-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .chatbot-input button {
+            background: #00bfa5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 15px;
+            }
+            
+            .nav-links {
+                margin: 20px 0;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+            
+            .upload-hero h2 {
+                font-size: 2.5rem;
+            }
+            
+            .upload-hero p {
+                font-size: 1rem;
+            }
+            
+            .upload-container h2 {
+                font-size: 2rem;
+            }
+            
+            .patient-info-section, .results-section {
+                min-width: 100%;
+            }
+            
+            .metadata-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .cancel-btn, .scan-btn {
+                width: 100%;
+                max-width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sticky Navigation Bar -->
+    <header class="navbar">
+        <div class="logo">
+            <img src="/images/dna3.png" alt="ALERA AI Logo">
+        </div>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="allergy.html">Analysis</a>
+            <a href="contact.html">Contact</a>
+            <a href="about.html">About</a>
+        </nav>
+        <div class="auth-buttons">
+            <button class="auth-button" onclick="window.location.href='signup.html'">Sign Up</button>
+            <button class="auth-button" onclick="window.location.href='login.html'">Log In</button>
+        </div>
+    </header>
+
+    <!-- Upload Hero Section -->
+    <section class="upload-hero">
+        <div class="hero-content">
+            <h2>AI-Powered Skin Analysis</h2>
+            <p>Upload a skin image for instant analysis using our advanced AI technology. Get accurate insights in minutes.</p>
+        </div>
+    </section>
+
+    <!-- Upload Container -->
+    <section class="upload-container">
+        <h2>Upload Skin Image</h2>
+        <div class="upload-content">
+            <!-- Patient Information Section -->
+            <div class="patient-info-section">
+                <div class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>Patient Information</h3>
+                </div>
+                
+                <div class="metadata-grid">
+                    <div class="metadata-field">
+                        <label for="ageInput">Age</label>
+                        <input type="number" id="ageInput" placeholder="Enter patient's age" min="1" max="110" required>
+                    </div>
+                    <div class="metadata-field">
+                        <label for="sexInput">Sex</label>
+                        <select id="sexInput">
+                            <option value="">Prefer not to say</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="metadata-field">
+                        <label for="siteInput">Anatomical Site</label>
+                        <select id="siteInput">
+                            <option value="">Unknown</option>
+                            <option value="head/neck">Head/Neck</option>
+                            <option value="torso">Torso</option>
+                            <option value="upper extremity">Upper Extremity</option>
+                            <option value="lower extremity">Lower Extremity</option>
+                            <option value="palms/soles">Palms/Soles</option>
+                            <option value="oral/genital">Oral/Genital</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Upload Box -->
+                <div class="upload-box" id="dropArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <p><strong>Skin Image</strong></p>
+                    <p>Drag and drop your file here</p>
+                    <p>or</p>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                    <button class="browse-btn" id="browseBtn">Choose File</button>
+                    <p class="file-info">Supported formats: JPG, PNG, JPEG</p>
+                    <p id="fileName"></p>
+                </div>
+                
+                <!-- Analyze Button -->
+                <div class="analyze-btn-container">
+                    <button class="analyze-btn" id="analyzeBtn" disabled>
+                        <i class="fas fa-search"></i> Analyze Image
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="results-section">
+                <div class="section-title">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>Analysis Results</h3>
+                </div>
+                
+                <div id="resultsPlaceholder">
+                    <p>Analysis Results Will Appear Here</p>
+                    <p>Submit patient information and an image to see the AI analysis results.</p>
+                </div>
+                
+                <div class="preview-section" id="previewSection">
+                    <img id="previewImage" alt="Preview" class="preview" />
+                    <div class="action-buttons">
+                        <button class="cancel-btn" id="cancelBtn">Cancel</button>
+                        <button class="scan-btn" id="scanBtn">Scan</button>
+                    </div>
+                    <p id="statusMessage" class="status-message"></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Disclaimer Section -->
+        <div class="disclaimer">
+            <h3><i class="fas fa-exclamation-triangle"></i> Disclaimer</h3>
+            <p>This tool is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of a qualified healthcare provider with any questions you may have regarding a medical condition.</p>
+        </div>
+    </section>
+
+    <!-- Call-to-Action Section -->
+    <section class="cta">
+        <h2>Need Help With Your Upload?</h2>
+        <p>Check out our <a href="about.html">About</a> page to learn more about how ALERA AI works, or <a href="contact.html">contact us</a> for assistance.</p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 ALERA AI. All rights reserved.</p>
+        <div class="social-media">
+            <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
+            <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://linkedin.com" target="_blank"><i class="fab fa-linkedin"></i></a>
+        </div>
+    </footer>
+
+    <!-- Chatbot Container -->
+    <div class="chatbot-container">
+        <button class="chatbot-button" id="chatbotToggle">
+            <i class="fas fa-comment"></i>
+        </button>
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <h3>ALERA Assistant</h3>
+                <button id="chatbotClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="message bot-message">Hello! How can I help you today?</div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbotInput" placeholder="Type your message...">
+                <button id="chatbotSend"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const dropArea = document.getElementById("dropArea");
+        const fileInput = document.getElementById("fileInput");
+        const browseBtn = document.getElementById("browseBtn");
+        const fileName = document.getElementById("fileName");
+        const previewImage = document.getElementById("previewImage");
+        const previewSection = document.getElementById("previewSection");
+        const cancelBtn = document.getElementById("cancelBtn");
+        const scanBtn = document.getElementById("scanBtn");
+        const analyzeBtn = document.getElementById("analyzeBtn");
+        const statusMessage = document.getElementById("statusMessage");
+        const resultsPlaceholder = document.getElementById("resultsPlaceholder");
+
+        // Function to preview uploaded image
+        function previewFile() {
+            let file = fileInput.files[0];
+            let reader = new FileReader();
+            
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+
+            reader.onloadend = function () {
+                previewImage.src = reader.result;
+                previewSection.style.display = "block";
+                resultsPlaceholder.style.display = "none";
+                statusMessage.innerText = "Image uploaded. Ready to scan.";
+                
+                // Enable the Scan and Analyze buttons
+                scanBtn.disabled = false;
+                analyzeBtn.disabled = false;
+            };
+        }
+
+        // Function to cancel upload
+        function cancelUpload() {
+            // Reset the file input
+            fileInput.value = "";
+
+            // Hide the preview section
+            previewSection.style.display = "none";
+            resultsPlaceholder.style.display = "block";
+
+            // Clear the file name display
+            fileName.innerText = "";
+
+            // Update the status message
+            statusMessage.innerText = "Upload canceled.";
+
+            // Disable the Scan and Analyze buttons
+            scanBtn.disabled = true;
+            analyzeBtn.disabled = true;
+        }
+
+        // Function to scan the image
+        function scanImage() {
+            let file = fileInput.files[0];
+            const age = document.getElementById("ageInput").value;
+            if (!file) {
+                alert("Please upload a file first.");
+                return;
+            }
+            if (!age || age < 1 || age > 110) {
+                alert("Please enter a valid age between 1 and 110.");
+                return;
+            }
+            // Only allow skin images by filename or type
+            const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
+           
+            statusMessage.innerText = "Scanning skin lesion image...";
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            // Add metadata if provided
+            if (age) formData.append("age", age);
+            const sex = document.getElementById("sexInput").value;
+            if (sex) formData.append("sex", sex);
+            const site = document.getElementById("siteInput").value;
+            if (site) formData.append("site", site);
+
+            fetch("/predict", {
+                method: "POST",
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                statusMessage.innerText = "Scan completed successfully.";
+
+                // Handle different response formats and ensure original_diseases is passed
+                let results = {};
+                if (data.results) {
+                    // Legacy format: pass through if it's already an object/array
+                    results = data.results;
+                    // Try to map legacy array to named diseases if server provided labels
+                    if (data.original_diseases) {
+                        results.original_diseases = data.original_diseases;
+                    }
+                } else if (data.probs && data.classes) {
+                    // New fusion model format
+                    results = {
+                        classes: data.classes,
+                        probs: data.probs,
+                        top_class: data.top_class,
+                        top_prob: data.top_prob
+                    };
+                    // If server returned original_diseases mapping, use it; otherwise build one from classes->probs
+                    if (data.original_diseases) {
+                        results.original_diseases = data.original_diseases;
+                    } else {
+                        const map = {};
+                        for (let i = 0; i < data.classes.length; i++) {
+                            map[data.classes[i]] = data.probs[i];
+                        }
+                        results.original_diseases = map;
+                    }
+                } else {
+                    // Fallback: use whatever the server returned
+                    results = data;
+                    if (data.original_diseases) results.original_diseases = data.original_diseases;
+                    else if (data.classes && data.probs) {
+                        const map = {};
+                        for (let i = 0; i < data.classes.length; i++) map[data.classes[i]] = data.probs[i];
+                        results.original_diseases = map;
+                    }
+                }
+
+                // Redirect to the results page with the prediction results
+                window.location.href = `results.html?results=${JSON.stringify(results)}`;
+            })
+            .catch(error => {
+                console.error("Error scanning image:", error);
+                statusMessage.innerText = "Error scanning image.";
+            });
+        }
+
+        // Drag and drop functionality
+        dropArea.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropArea.classList.add("dragover");
+        });
+
+        dropArea.addEventListener("dragleave", () => {
+            dropArea.classList.remove("dragover");
+        });
+
+        dropArea.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropArea.classList.remove("dragover");
+            const file = e.dataTransfer.files[0];
+
+            // Check file type
+            const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
+            if (!allowedTypes.includes(file.type)) {
+                alert("Only image files (PNG, JPG, JPEG, GIF) are allowed.");
+                cancelUpload(); // Clear the file input
+                return;
+            }
+
+            fileInput.files = e.dataTransfer.files;
+            fileName.innerText = `Selected file: ${file.name}`;
+            previewFile();
+        });
+
+        // Handle file input change (when Browse Files is clicked)
+        browseBtn.addEventListener("click", () => {
+            fileInput.click(); // Trigger the file input dialog
+        });
+
+        fileInput.addEventListener("change", () => {
+            const file = fileInput.files[0];
+            if (file) {
+                // Check file type
+                const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
+                if (!allowedTypes.includes(file.type)) {
+                    alert("Only image files (PNG, JPG, JPEG, GIF) are allowed.");
+                    cancelUpload(); // Clear the file input
+                    return;
+                }
+
+                fileName.innerText = `Selected file: ${file.name}`;
+                previewFile();
+            }
+        });
+
+        // Button event listeners
+        cancelBtn.addEventListener("click", cancelUpload);
+        scanBtn.addEventListener("click", scanImage);
+        analyzeBtn.addEventListener("click", scanImage); // Same functionality for both buttons
+
+        // Chatbot functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatbotToggle = document.getElementById('chatbotToggle');
+            const chatbotWindow = document.getElementById('chatbotWindow');
+            const chatbotClose = document.getElementById('chatbotClose');
+            const chatbotSend = document.getElementById('chatbotSend');
+            const chatbotInput = document.getElementById('chatbotInput');
+            const chatbotMessages = document.getElementById('chatbotMessages');
+            
+            chatbotToggle.addEventListener('click', function() {
+                chatbotWindow.style.display = chatbotWindow.style.display === 'flex' ? 'none' : 'flex';
+            });
+            
+            chatbotClose.addEventListener('click', function() {
+                chatbotWindow.style.display = 'none';
+            });
+            
+            chatbotSend.addEventListener('click', sendMessage);
+            chatbotInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+            
+            function sendMessage() {
+                const message = chatbotInput.value.trim();
+                if (message) {
+                    addMessage(message, 'user');
+                    chatbotInput.value = '';
+                    
+                    // Simulate bot response
+                    setTimeout(function() {
+                        addMessage("I'm here to help with skin condition analysis. For detailed analysis, please upload your skin image.", 'bot');
+                    }, 1000);
+                }
+            }
+            
+            function addMessage(text, sender) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', `${sender}-message`);
+                messageElement.textContent = text;
+                chatbotMessages.appendChild(messageElement);
+                chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            }
+        });
+    </script>
+    <script src="static/chatbot.js"></script>
+</body>
+</html>

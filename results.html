@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Results - ALLERGEN</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="static/auth.js" defer></script>
+    <!-- Include jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* Center and style the Download PDF button */
+        .download-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 24px 0;
+        }
+
+        .download-btn {
+            background: var(--secondary, #00bfa5);
+            color: #fff;
+            padding: 12px 22px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            transition: transform 0.14s ease, box-shadow 0.14s ease, opacity 0.14s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.16);
+            opacity: 0.98;
+        }
+
+        @media (max-width: 520px) {
+            .download-btn {
+                width: 90%;
+                max-width: 360px;
+                padding: 12px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sticky Navigation Bar -->
+    <header class="navbar">
+        <div class="logo">
+            <img src="/images/dna3.png" alt="ALERA Logo">
+        </div>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="allergy.html">Analysis</a>
+            <a href="contact.html">Contact</a>
+            <a href="about.html">About</a>
+        </nav>
+        <div class="auth-buttons">
+            <button class="auth-button" onclick="window.location.href='signup.html'">Sign Up</button>
+            <button class="auth-button" onclick="window.location.href='login.html'">Log In</button>
+        </div>
+    </header>
+
+    <!-- Results Section -->
+    <section class="results-container">
+        <h2>Scan Results</h2>
+        <div class="results-content">
+            <div class="results-card">
+                <h3 id="resultsTitle">Analysis Results</h3>
+                <div id="analysisResults"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Button -->
+    <div class="download-section">
+        <button class="download-btn" onclick="downloadPDF()">Download PDF</button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Allergen. All rights reserved.</p>
+        <div class="social-media">
+            <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
+            <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://linkedin.com" target="_blank"><i class="fab fa-linkedin"></i></a>
+        </div>
+    </footer>
+
+    <script>
+        // Function to display the results
+        function displayResults() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const results = JSON.parse(urlParams.get('results'));
+
+            const analysisResults = document.getElementById('analysisResults');
+            const resultsTitle = document.getElementById('resultsTitle');
+
+            // Check if this is the new skin lesion format or legacy allergy format
+            if (results.classes && results.probs) {
+                // New skin lesion classification format
+                if (results.classes.includes('Benign') && results.classes.includes('Malignant')) {
+                    resultsTitle.textContent = 'Skin Lesion Analysis';
+                } else {
+                    resultsTitle.textContent = 'Skin Lesion Classification';
+                }
+                
+                // Sort results by probability (highest first)
+                const sortedResults = results.classes.map((className, index) => ({
+                    name: className,
+                    probability: results.probs[index]
+                })).sort((a, b) => b.probability - a.probability);
+
+                analysisResults.innerHTML = sortedResults.map((result, index) => {
+                    const isClickable = result.probability >= 0.99; // Only allow clicking if 99% or higher
+                    const clickStyle = isClickable ? "cursor: pointer;" : "cursor: default;";
+                    const clickHint = isClickable ? "<span class='click-hint'>(Click for details)</span>" : "";
+                    
+                    return `
+                    <div class="analysis-result" ${isClickable ? `onclick="toggleDiseaseDetails('${result.name}')"` : ''} style="${clickStyle}">
+                        <div class="result-header">
+                            <p class="result-name">${result.name} ${clickHint}</p>
+                            <span class="result-percentage">${(result.probability * 100).toFixed(2)}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: ${result.probability * 100}%; background-color: ${result.name === 'Malignant' ? '#e74c3c' : (result.name === 'Benign' ? '#27ae60' : (index === 0 ? '#00bfa5' : '#e0e0e0'))};"></div>
+                        </div>
+                        ${index === 0 ? '<div class="top-prediction">Top Prediction</div>' : ''}
+                        <div id="disease-details-${result.name}" class="disease-details" style="display: none;">
+                            <div class="disease-breakdown">
+                                <h4>Most Likely Diseases in ${result.name} Category:</h4>
+                                <div id="disease-list-${result.name}"></div>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+
+                // Add summary
+                const topResult = sortedResults[0];
+                analysisResults.innerHTML += `
+                    <div class="summary-card">
+                        <h4>Summary</h4>
+                        <p><strong>Most Likely:</strong> ${topResult.name} (${(topResult.probability * 100).toFixed(2)}%)</p>
+                        <p class="disclaimer">* Results are for educational purposes only. Consult a healthcare professional for medical advice.</p>
+                    </div>
+                `;
+            } else if (Array.isArray(results)) {
+                // Legacy allergy format
+                resultsTitle.textContent = 'Allergy Profile';
+                
+                analysisResults.innerHTML = results.map((result, index) => `
+                    <div class="analysis-result">
+                        <div class="result-header">
+                            <p class="result-name">Allergy ${index + 1}</p>
+                            <span class="result-percentage">${(result * 100).toFixed(2)}%</span>
+                        </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: ${result * 100}%;"></div>
+                        </div>
+                </div>
+            `).join('');
+            } else {
+                // Fallback for unknown format
+                analysisResults.innerHTML = '<p>Unable to display results. Please try again.</p>';
+            }
+        }
+
+        // Call the function to display results when the page loads
+        displayResults();
+
+        // Function to toggle disease details
+        function toggleDiseaseDetails(category) {
+            const detailsDiv = document.getElementById(`disease-details-${category}`);
+            const diseaseListDiv = document.getElementById(`disease-list-${category}`);
+            
+            if (detailsDiv.style.display === 'none') {
+                detailsDiv.style.display = 'block';
+                
+                // Get original disease data from URL params
+                const urlParams = new URLSearchParams(window.location.search);
+                const results = JSON.parse(urlParams.get('results'));
+                
+                if (results.original_diseases) {
+                    const diseases = results.original_diseases;
+                    console.log('Original diseases data:', diseases);
+                    let diseaseList = '';
+                    
+                    if (category === 'Benign') {
+                        // Show benign diseases sorted by probability
+                        const benignDiseases = [
+                            { name: 'Melanocytic Nevus (Mole)', prob: diseases.NV || 0, code: 'NV' }
+                        ].sort((a, b) => b.prob - a.prob);
+                        
+                        console.log('Benign diseases:', benignDiseases);
+                        
+                        diseaseList = benignDiseases.map((d, index) => 
+                            `<div class="disease-item ${index === 0 ? 'top-disease' : ''}">
+                                <span class="disease-name">${d.name} (${d.code}) ${index === 0 ? '👑' : ''}</span>
+                                <span class="disease-prob">${(d.prob * 100).toFixed(6)}%</span>
+                            </div>`
+                        ).join('');
+                        
+                        if (benignDiseases.length === 0) {
+                            diseaseList = '<div class="disease-item"><span class="disease-name">No benign diseases detected</span></div>';
+                        }
+                    } else if (category === 'Malignant') {
+                        // Show malignant diseases sorted by probability
+                        const malignantDiseases = [
+                            { name: 'Melanoma', prob: diseases.MEL || 0, code: 'MEL' },
+                            { name: 'Basal Cell Carcinoma', prob: diseases.BCC || 0, code: 'BCC' }
+                        ].sort((a, b) => b.prob - a.prob);
+                        
+                        console.log('Malignant diseases:', malignantDiseases);
+                        
+                        diseaseList = malignantDiseases.map((d, index) => 
+                            `<div class="disease-item ${index === 0 ? 'top-disease' : ''}">
+                                <span class="disease-name">${d.name} (${d.code}) ${index === 0 ? '👑' : ''}</span>
+                                <span class="disease-prob">${(d.prob * 100).toFixed(6)}%</span>
+                            </div>`
+                        ).join('');
+                        
+                        if (malignantDiseases.length === 0) {
+                            diseaseList = '<div class="disease-item"><span class="disease-name">No malignant diseases detected</span></div>';
+                        }
+                    }
+                    
+                    console.log('Generated disease list:', diseaseList);
+                    diseaseListDiv.innerHTML = diseaseList;
+                } else {
+                    // Fallback: try to extract from the main results
+                    console.log('Original diseases not found, trying fallback...');
+                    console.log('Results:', results);
+                    diseaseListDiv.innerHTML = '<p>Detailed disease breakdown not available.</p>';
+                }
+            } else {
+                detailsDiv.style.display = 'none';
+            }
+        }
+
+        // Function to generate and download PDF
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(22);
+            doc.text("Scan Results - ALLERGEN", 10, 20);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const results = JSON.parse(urlParams.get('results'));
+
+            let yPosition = 40;
+
+            if (results.classes && results.probs) {
+                // Skin lesion classification format
+                doc.setFontSize(16);
+                doc.text("Skin Lesion Classification", 10, yPosition);
+                yPosition += 10;
+
+                // Sort results by probability
+                const sortedResults = results.classes.map((className, index) => ({
+                    name: className,
+                    probability: results.probs[index]
+                })).sort((a, b) => b.probability - a.probability);
+
+                sortedResults.forEach((result, index) => {
+                    doc.setFontSize(14);
+                    doc.text(`${result.name}: ${(result.probability * 100).toFixed(2)}%`, 10, yPosition);
+                    yPosition += 10;
+                });
+
+                // Add summary
+                yPosition += 5;
+                doc.setFontSize(12);
+                doc.text("Summary:", 10, yPosition);
+                yPosition += 8;
+                const topResult = sortedResults[0];
+                doc.text(`Most Likely: ${topResult.name} (${(topResult.probability * 100).toFixed(2)}%)`, 10, yPosition);
+                yPosition += 8;
+                doc.text("* Results are for educational purposes only.", 10, yPosition);
+            } else if (Array.isArray(results)) {
+                // Legacy allergy format
+                doc.setFontSize(16);
+                doc.text("Allergy Profile", 10, yPosition);
+                yPosition += 10;
+
+            results.forEach((result, index) => {
+                doc.setFontSize(14);
+                doc.text(`Allergy ${index + 1}: ${(result * 100).toFixed(2)}%`, 10, yPosition);
+                yPosition += 10;
+            });
+            }
+
+            doc.save("scan_results.pdf");
+        }
+    </script>
+    <script src="static/chatbot.js"></script>
+</body>
+</html>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALERA - AI Dermatology Analysis</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="static/firebase-init.js"></script>
+    <script src="static/auth.js" defer></script>
+    <style>
+        /* Additional styles specific to the redesigned index page */
+        :root {
+            --primary: #132846;
+            --secondary: #00bfa5;
+            --accent: #ff6f61;
+            --light: #f9f9f9;
+            --dark: #333;
+            --text: #555;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #1a3a5f 100%);
+            color: white;
+            padding: 100px 5%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
+            background-size: cover;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .hero h2 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        .cta-button {
+            background-color: var(--accent);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 111, 97, 0.3);
+        }
+        
+        .cta-button:hover {
+            background-color: #ff3b2f;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 111, 97, 0.4);
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 100px 5%;
+            text-align: center;
+            background-color: white;
+        }
+        
+        .features h2 {
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .feature-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .feature {
+            flex: 1;
+            min-width: 300px;
+            max-width: 350px;
+            padding: 40px 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: white;
+        }
+        
+        .feature:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+        }
+        
+        .feature-icon {
+            font-size: 50px;
+            color: var(--secondary);
+            margin-bottom: 25px;
+        }
+        
+        .feature h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .feature p {
+            color: var(--text);
+            line-height: 1.7;
+        }
+        
+        /* Stats Section */
+        .stats {
+            padding: 80px 5%;
+            background: linear-gradient(135deg, var(--primary) 0%, #1a3a5f 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 30px;
+        }
+        
+        .stat-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        /* Process Section */
+        .process {
+            padding: 100px 5%;
+            background-color: var(--light);
+            text-align: center;
+        }
+        
+        .process h2 {
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .process-steps {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .step {
+            flex: 1;
+            min-width: 250px;
+            max-width: 300px;
+            text-align: center;
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 25px;
+        }
+        
+        .step h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .step p {
+            color: var(--text);
+            line-height: 1.7;
+        }
+        
+        /* CTA Section */
+        .cta {
+            padding: 100px 5%;
+            background: white;
+            text-align: center;
+        }
+        
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .cta p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            color: var(--text);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h2 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .feature, .step {
+                min-width: 100%;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sticky Navigation Bar -->
+    <header class="navbar">
+        <div class="logo">
+            <img src="/images/dna3.png" alt="ALERA Logo">
+        </div>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="allergy.html">Analysis</a>
+            <a href="contact.html">Contact</a>
+            <a href="about.html">About</a>
+        </nav>
+        <div class="auth-buttons">
+            <button class="auth-button" onclick="window.location.href='signup.html'">Sign Up</button>
+            <button class="auth-button" onclick="window.location.href='login.html'">Log In</button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Advanced AI Dermatology Analysis</h2>
+            <p>Professional-grade skin condition assessment powered by artificial intelligence. Get instant, accurate analysis of dermatological conditions with clinical precision.</p>
+            <button class="cta-button" onclick="startAnalysis()">Start Analysis</button>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <h2>Why Choose ALERA AI?</h2>
+        <div class="feature-container">
+            <div class="feature">
+                <i class="fas fa-brain feature-icon"></i>
+                <h3>AI-Powered Analysis</h3>
+                <p>Advanced machine learning techniques trained on thousands of clinical cases for accurate dermatological insights.</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-bolt feature-icon"></i>
+                <h3>Instant Results</h3>
+                <p>Get comprehensive analysis in minutes, enabling early detection and timely intervention for skin conditions.</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-chart-bar feature-icon"></i>
+                <h3>Detailed Reporting</h3>
+                <p>Comprehensive probability scores for multiple dermatological conditions with clear explanations.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-number">10K+</div>
+                <div class="stat-label">Images Analyzed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">99.2%</div>
+                <div class="stat-label">Accuracy Rate</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">50+</div>
+                <div class="stat-label">Skin Conditions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Availability</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section class="process">
+        <h2>How It Works</h2>
+        <div class="process-steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Upload Image</h3>
+                <p>Take a clear photo of the skin condition or upload an existing image from your device.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>AI Analysis</h3>
+                <p>Our advanced AI processes the image using deep learning models trained on clinical cases.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Get Results</h3>
+                <p>Review detailed analysis with probability scores, professional recommendations, and next steps.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <h2>Ready to Analyze Skin Conditions?</h2>
+        <p>Get started with our advanced AI classifier for professional dermatological analysis.</p>
+    <button class="cta-button" onclick="window.location.href='signup.html'">Start Skin Analysis</button>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 ALERA AI. All rights reserved.</p>
+        <div class="social-media">
+            <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
+            <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
+            <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://linkedin.com" target="_blank"><i class="fab fa-linkedin"></i></a>
+        </div>
+    </footer>
+
+    <script src="static/chatbot.js"></script>
+    <script>
+      // Use the same local flag used by the auth helper in static/auth.js
+      // static/auth.js sets localStorage item 'alera_logged_in' === '1' when signed in
+      function startAnalysis() {
+        try {
+          if (localStorage && localStorage.getItem('alera_logged_in') === '1') {
+            // Signed in → go to the upload / analysis page
+            window.location.href = 'uploadDNAimage.html';
+          } else {
+            // Not signed in → show signup
+            window.location.href = 'signup.html';
+          }
+        } catch (e) {
+          // Fail-safe: go to signup
+          window.location.href = 'signup.html';
+        }
+      }
+    </script>
+</body>
+</html>

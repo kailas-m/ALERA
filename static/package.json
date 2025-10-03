@@ -1,0 +1,46 @@
+{
+  "name": "shopbot-ecommerce",
+  "version": "1.0.0",
+  "description": "AI-Powered E-commerce Platform with React and Flask",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py",
+    "dev": "python app.py",
+    "build": "echo 'Building React components...'",
+    "test": "echo 'No tests specified'"
+  },
+  "keywords": [
+    "ecommerce",
+    "react",
+    "flask",
+    "ai",
+    "chatbot",
+    "groq",
+    "shopping"
+  ],
+  "author": "ShopBot Team",
+  "license": "MIT",
+  "dependencies": {
+    "flask": "^3.1.2",
+    "groq": "^0.31.1",
+    "flask-cors": "^6.0.1"
+  },
+  "devDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "python": ">=3.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/shopbot-ecommerce.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/shopbot-ecommerce/issues"
+  },
+  "homepage": "https://github.com/yourusername/shopbot-ecommerce#readme"
+}
+
+
